@@ -7,7 +7,7 @@ const app = express();
 app.use(express.json());
 
 app.get('/', (req, res) => {
-    res.json({ message: 'This is CORS-enabled for specific domains.' });
+    res.json({ message: 'hello world' });
 });
 
 
