@@ -4,13 +4,16 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "deploy": "vercel deploy"
+    "deploy": "vercel deploy",
+    "dev": "nodemon index.js"
   },
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^4.19.2",
+    "node-cron": "^3.0.3",
     "sqlite3": "^5.1.7"
   }
 }
