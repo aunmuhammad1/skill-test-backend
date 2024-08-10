@@ -1,9 +1,6 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
 const app = express();
 const cors = require('cors');
-const cronJob = require('./cronJob'); // Import and run the cron job
 const productsRoutes = require('./routes/products');
 const dealsRoutes = require('./routes/deals');
 
