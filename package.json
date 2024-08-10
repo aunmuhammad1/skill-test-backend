@@ -3,10 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "concurrently \"npm run redis\" \"npm run server\"",
     "deploy": "vercel deploy",
-    "server": "nodemon index.js",
-    "dev": "concurrently \"npm run redis\" \"npm run server\""
+    "server": "nodemon index.js"
   },
   "author": "",
   "license": "ISC",
