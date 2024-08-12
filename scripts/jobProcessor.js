@@ -24,20 +24,15 @@ redisConnection.on('error', (err) => {
   console.error('Redis connection error:', err.message);
 });
 
-console.log('Connected to Redis');
 
 // Create a queue with the Redis connection
 const queue = new Queue('deal-updates', { connection: redisConnection });
-
-console.log('Queue created');
 
 // Set up SQLite3 connection
 const dbPath = path.resolve(__dirname, '../database.sqlite');
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
     console.error('Error connecting to the SQLite database:', err.message);
-  } else {
-    console.log('Connected to the SQLite database.');
   }
 });
 
@@ -70,7 +65,6 @@ const checkAndAddJobs = async () => {
             end_time: row.end_time,
             status: row.status
           });
-          console.log(`Added job for deal ${row.id} to the queue`);
         } catch (err) {
           console.error('Error adding job to the queue:', err.message);
         }
@@ -87,7 +81,6 @@ const updateDealStatuses = () => {
     const now = new Date();
     const nowISOString = now.toISOString();
 
-    console.log('Current Time:', nowISOString);
 
     // Use a transaction to ensure atomicity
     db.serialize(() => {
@@ -112,7 +105,6 @@ const updateDealStatuses = () => {
           reject(err);
           return;
         }
-        console.log(`Activated ${this.changes} deals.`);
       });
 
       db.run(deactivateQuery, [nowISOString], function(err) {
@@ -122,7 +114,6 @@ const updateDealStatuses = () => {
           reject(err);
           return;
         }
-        console.log(`Deactivated ${this.changes} deals.`);
         db.run('COMMIT');
         resolve();
       });
@@ -132,9 +123,7 @@ const updateDealStatuses = () => {
 
 // Create a worker with rate limiting
 const worker = new Worker('deal-updates', async (job) => {
-  console.log(`Worker received job ${job.id} with data ${JSON.stringify(job.data)}`);
   try {
-    console.log('Updating deal statuses...');
     await updateDealStatuses();
   } catch (err) {
     console.error(`Error in job ${job.id}: ${err.message}`);
@@ -147,9 +136,6 @@ const worker = new Worker('deal-updates', async (job) => {
   }
 });
 
-worker.on('completed', (job) => {
-  console.log(`Job ${job.id} completed`);
-});
 
 worker.on('failed', (job, err) => {
   console.error(`Job ${job.id} failed with error ${err.message}`);
@@ -159,43 +145,6 @@ worker.on('error', (err) => {
   console.error('Worker encountered an error:', err.message);
 });
 
-console.log('Worker created');
-
-// Export the necessary components for use in other files if needed
-export { redisConnection, queue, worker };
-
-// Function to check queue status
-const checkQueueStatus = async () => {
-  try {
-    const waitingCount = await queue.getWaitingCount();
-    const activeCount = await queue.getActiveCount();
-    const completedCount = await queue.getCompletedCount();
-    const failedCount = await queue.getFailedCount();
-    
-    console.log(`Waiting jobs: ${waitingCount}`);
-    console.log(`Active jobs: ${activeCount}`);
-    console.log(`Completed jobs: ${completedCount}`);
-    console.log(`Failed jobs: ${failedCount}`);
-    
-    const waitingJobs = await queue.getJobs(['waiting'], 0, 10);
-    console.log('Waiting jobs:', waitingJobs.map(job => job.id));
-    
-    const activeJobs = await queue.getJobs(['active'], 0, 10);
-    console.log('Active jobs:', activeJobs.map(job => job.id));
-    
-    const completedJobs = await queue.getJobs(['completed'], 0, 10);
-    console.log('Completed jobs:', completedJobs.map(job => job.id));
-    
-    const failedJobs = await queue.getJobs(['failed'], 0, 10);
-    console.log('Failed jobs:', failedJobs.map(job => job.id));
-    
-  } catch (err) {
-    console.error('Error checking queue:', err.message);
-  }
-};
-
-// Run queue status check every 30 seconds
-setInterval(checkQueueStatus, 30000);
 
 // Check and add jobs to the queue every minute
 setInterval(checkAndAddJobs, 60000);
