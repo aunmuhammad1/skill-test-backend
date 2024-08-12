@@ -3,6 +3,7 @@ import { Queue, Worker } from 'bullmq';
 import sqlite3 from 'sqlite3';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import cron from 'node-cron'; // Import node-cron
 
 // Resolve __dirname and __filename in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -23,7 +24,6 @@ const redisConnection = new IORedis({
 redisConnection.on('error', (err) => {
   console.error('Redis connection error:', err.message);
 });
-
 
 // Create a queue with the Redis connection
 const queue = new Queue('deal-updates', { connection: redisConnection });
@@ -81,7 +81,6 @@ const updateDealStatuses = () => {
     const now = new Date();
     const nowISOString = now.toISOString();
 
-
     // Use a transaction to ensure atomicity
     db.serialize(() => {
       db.run('BEGIN TRANSACTION');
@@ -136,7 +135,6 @@ const worker = new Worker('deal-updates', async (job) => {
   }
 });
 
-
 worker.on('failed', (job, err) => {
   console.error(`Job ${job.id} failed with error ${err.message}`);
 });
@@ -145,6 +143,10 @@ worker.on('error', (err) => {
   console.error('Worker encountered an error:', err.message);
 });
 
+// Set up a cron job to check and add jobs to the queue every minute
+cron.schedule('* * * * *', () => {
+  console.log('Running cron job to check and add jobs to the queue...');
+  checkAndAddJobs();
+});
 
-// Check and add jobs to the queue every minute
-setInterval(checkAndAddJobs, 60000);
+console.log('Cron job scheduled to run every minute');
