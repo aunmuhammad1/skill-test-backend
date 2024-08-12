@@ -24,7 +24,7 @@ router.post('/', async (req, res) => {
 
         // Insert into Deals Table
         const dealQuery = 'INSERT INTO Deals (title, status) VALUES (?, ?)';
-        db.run(dealQuery, [title, 'inactive'], function(err) {
+        db.run(dealQuery, [title, 'active'], function(err) {
           if (err) {
             console.error('Error inserting deal:', err.message);
             return db.run('ROLLBACK', () => reject(err));
