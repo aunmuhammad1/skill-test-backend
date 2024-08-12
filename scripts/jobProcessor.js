@@ -3,7 +3,7 @@ import { Queue, Worker } from 'bullmq';
 import sqlite3 from 'sqlite3';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import cron from 'node-cron'; // Import node-cron
+import cron from 'node-cron';
 
 // Resolve __dirname and __filename in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -145,8 +145,6 @@ worker.on('error', (err) => {
 
 // Set up a cron job to check and add jobs to the queue every minute
 cron.schedule('* * * * *', () => {
-  console.log('Running cron job to check and add jobs to the queue...');
   checkAndAddJobs();
 });
 
-console.log('Cron job scheduled to run every minute');
