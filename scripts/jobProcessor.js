@@ -5,7 +5,7 @@ const path = require('path');
 const { queue } = require('./bullmq');
 
 // Set up SQLite3 connection
-const dbPath = path.resolve(__dirname, 'database.sqlite');
+const dbPath = path.resolve(__dirname, '../database.sqlite');
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
     console.error('Error connecting to the SQLite database:', err.message);
