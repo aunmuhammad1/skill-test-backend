@@ -1,7 +1,13 @@
-const express = require('express');
+import express from 'express';
+import sqlite3 from 'sqlite3';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
 const router = express.Router();
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
+
+// Resolve __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Set up SQLite3 connection
 const dbPath = path.resolve(__dirname, '../database.sqlite');
@@ -42,4 +48,4 @@ router.get('/', (req, res) => {
   });
 });
 
-module.exports = router;
+export default router;

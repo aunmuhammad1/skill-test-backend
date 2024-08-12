@@ -1,8 +1,8 @@
-const express = require('express');
+import express from 'express';
 const app = express();
-const cors = require('cors');
-const productsRoutes = require('./routes/products');
-const dealsRoutes = require('./routes/deals');
+import cors from 'cors';
+import productsRoutes from './routes/products.js';
+import dealsRoutes from './routes/deals.js'; // Use default import
 
 app.use(cors()); // Add this line to enable CORS
 

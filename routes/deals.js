@@ -1,7 +1,13 @@
-const express = require('express');
+import express from 'express';
+import sqlite3 from 'sqlite3';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
 const router = express.Router();
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
+
+// Resolve __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Set up SQLite3 connection
 const dbPath = path.resolve(__dirname, '../database.sqlite');
@@ -31,7 +37,7 @@ router.post('/', async (req, res) => {
           }
           const dealId = this.lastID;
 
-          // Insert into Deals Product Table
+          // Insert into DealsProduct Table
           const dealProductQuery = 'INSERT INTO DealsProduct (deals_id, product_id, product_variant_id, deal_selling_price, quantity, start_time, end_time, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
           db.run(dealProductQuery, [dealId, productId, product_variantId, sellingPrice, quantity, timeRange[0], timeRange[1], 'inactive'], function(err) {
             if (err) {
@@ -90,5 +96,4 @@ router.get('/', (req, res) => {
   });
 });
 
-
-module.exports = router;
+export default router;

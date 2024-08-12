@@ -2,16 +2,18 @@
   "name": "backend",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "start": "concurrently \"npm run redis\" \"npm run server\"",
+    "start": "concurrently \"npm run schedule\" \"npm run server\"",
     "deploy": "vercel deploy",
-    "server": "nodemon index.js"
+    "server": "nodemon index.js",
+    "schedule": "node scripts/jobProcessor.js"
   },
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "bullmq": "^5.12.2",
+    "bullmq": "^5.12.4",
     "concurrently": "^8.2.2",
     "cors": "^2.8.5",
     "express": "^4.19.2",
