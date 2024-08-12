@@ -23,7 +23,7 @@ router.post('/', async (req, res) => {
 
   const insertDeals = (deal) => {
     return new Promise((resolve, reject) => {
-      const { title, productId, product_variantId, sellingPrice, quantity, timeRange } = deal;
+      const { title, productId, product_variantId, sellingPrice, quantity, timeRange, timezone } = deal;
 
       db.serialize(() => {
         db.run('BEGIN TRANSACTION'); // Start transaction
@@ -38,8 +38,8 @@ router.post('/', async (req, res) => {
           const dealId = this.lastID;
 
           // Insert into DealsProduct Table
-          const dealProductQuery = 'INSERT INTO DealsProduct (deals_id, product_id, product_variant_id, deal_selling_price, quantity, start_time, end_time, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
-          db.run(dealProductQuery, [dealId, productId, product_variantId, sellingPrice, quantity, timeRange[0], timeRange[1], 'inactive'], function(err) {
+          const dealProductQuery = 'INSERT INTO DealsProduct (deals_id, product_id, product_variant_id, deal_selling_price, quantity, start_time, end_time, status, timezone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
+          db.run(dealProductQuery, [dealId, productId, product_variantId, sellingPrice, quantity, timeRange[0], timeRange[1], 'inactive', timezone], function(err) {
             if (err) {
               console.error('Error inserting deal product:', err.message);
               return db.run('ROLLBACK', () => reject(err));

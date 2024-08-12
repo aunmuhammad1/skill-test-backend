@@ -4,6 +4,7 @@ import sqlite3 from 'sqlite3';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import cron from 'node-cron';
+import moment from 'moment-timezone'; // Import moment-timezone
 
 // Resolve __dirname and __filename in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -36,24 +37,31 @@ const db = new sqlite3.Database(dbPath, (err) => {
   }
 });
 
+
 // Function to check the database and add jobs to the queue
 const checkAndAddJobs = async () => {
   try {
-    const now = new Date().toISOString();
+    const now = new Date();
+    const nowISOString = now.toISOString();
 
-    // Fetch deals that need to be processed
+    // Fetch deals that need to be activated
     db.all(`
       SELECT * FROM DealsProduct
       WHERE status = 'inactive' AND start_time <= ? AND end_time >= ?
-    `, [now, now], async (err, rows) => {
+    `, [nowISOString, nowISOString], async (err, rows) => {
       if (err) {
-        console.error('Error fetching deals:', err.message);
+        console.error('Error fetching deals for activation:', err.message);
         return;
       }
 
       // Add each deal to the queue
       for (const row of rows) {
         try {
+          // Convert current time to the user's time zone
+          const userTimeZone = row.timezone || 'UTC'; // Default to UTC if no timezone is provided
+          const userStartTime = moment.tz(row.start_time, userTimeZone).toDate();
+          const userEndTime = moment.tz(row.end_time, userTimeZone).toDate();
+
           await queue.add('deal-updates', {
             id: row.id,
             deals_id: row.deals_id,
@@ -61,12 +69,50 @@ const checkAndAddJobs = async () => {
             product_variant_id: row.product_variant_id,
             deal_selling_price: row.deal_selling_price,
             quantity: row.quantity,
-            start_time: row.start_time,
-            end_time: row.end_time,
-            status: row.status
+            start_time: userStartTime.toISOString(),
+            end_time: userEndTime.toISOString(),
+            status: row.status,
+            timezone: row.timezone,
+            action: 'activate' // Add action type for clarity
           });
         } catch (err) {
-          console.error('Error adding job to the queue:', err.message);
+          console.error('Error adding activation job to the queue:', err.message);
+        }
+      }
+    });
+
+    // Fetch deals that need to be deactivated
+    db.all(`
+      SELECT * FROM DealsProduct
+      WHERE status = 'active' AND end_time < ?
+    `, [nowISOString], async (err, rows) => {
+      if (err) {
+        console.error('Error fetching deals for deactivation:', err.message);
+        return;
+      }
+
+      // Add each deal to the queue
+      for (const row of rows) {
+        try {
+          // Convert current time to the user's time zone
+          const userTimeZone = row.timezone || 'UTC'; // Default to UTC if no timezone is provided
+          const userEndTime = moment.tz(row.end_time, userTimeZone).toDate();
+
+          await queue.add('deal-updates', {
+            id: row.id,
+            deals_id: row.deals_id,
+            product_id: row.product_id,
+            product_variant_id: row.product_variant_id,
+            deal_selling_price: row.deal_selling_price,
+            quantity: row.quantity,
+            start_time: row.start_time, // Use original times
+            end_time: userEndTime.toISOString(),
+            status: row.status,
+            timezone: row.timezone,
+            action: 'deactivate' // Add action type for clarity
+          });
+        } catch (err) {
+          console.error('Error adding deactivation job to the queue:', err.message);
         }
       }
     });
@@ -74,6 +120,7 @@ const checkAndAddJobs = async () => {
     console.error('Error in checkAndAddJobs:', err.message);
   }
 };
+
 
 // Function to update deal statuses
 const updateDealStatuses = () => {
